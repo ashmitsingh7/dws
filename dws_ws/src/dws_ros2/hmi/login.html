@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Sign In</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .login-stat-value { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+<!-- Icon sprite -->
+<div id="dws-icons-sprite" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></symbol>
+  </svg>
+</div>
+
+<div class="login-root">
+
+  <!-- Brand half -->
+  <div class="login-brand-half">
+    <div class="login-brand-mark">
+      <div class="login-brand-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-brand-name">DWS System</div>
+        <div class="login-brand-sub">Delhivery Limited</div>
+      </div>
+    </div>
+
+    <h1 class="login-headline">
+      Precision <span>Dimensioning,</span><br>Weighing &amp; Scanning
+    </h1>
+    <p class="login-desc">
+      Industrial-grade parcel measurement powered by Intel RealSense depth vision.
+      Accurate to ±2mm at up to 1,200 parcels per hour.
+    </p>
+
+    <div class="login-stats">
+      <div class="login-stat">
+        <span class="login-stat-value">±2mm</span>
+        <span class="login-stat-label">Measurement accuracy</span>
+      </div>
+      <div class="login-stat">
+        <span class="login-stat-value">1200</span>
+        <span class="login-stat-label">Parcels / hour</span>
+      </div>
+      <div class="login-stat">
+        <span class="login-stat-value">99.8%</span>
+        <span class="login-stat-label">Scan success rate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form half -->
+  <div class="login-form-half">
+    <div class="login-form-card">
+      <h2 class="login-form-title">Sign in</h2>
+      <p class="login-form-sub">Enter your credentials to access the DWS dashboard.</p>
+
+      <div id="login-error" class="login-error-banner" style="display:none;" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span id="login-error-msg">Invalid username or password.</span>
+      </div>
+
+      <div class="login-form-fields">
+        <!-- Username -->
+        <div class="form-group">
+          <label class="form-label" for="login-username">Username</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon-left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input id="login-username" class="form-control" type="text" placeholder="username" autocomplete="username" autofocus>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon-left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input id="login-password" class="form-control" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button class="input-icon-right btn-show-pass" type="button" aria-label="Toggle password visibility">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-form-options">
+        <label class="login-checkbox-wrap">
+          <input type="checkbox" id="login-remember"> Remember me
+        </label>
+        <button class="login-forgot" type="button" onclick="alert('Contact your system administrator to reset your password.')">Forgot password?</button>
+      </div>
+
+      <button id="login-btn" class="btn btn-primary btn-lg login-btn" type="button">
+        Sign in
+      </button>
+
+      <div class="login-version">
+        DWS v1.0 Build 005.1<br>
+        <span>Intel RealSense D455 · Ubuntu 24.04</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script>
+'use strict';
+
+const API_BASE = `http://${window.location.hostname}:8000`;
+
+const loginBtn  = document.getElementById('login-btn');
+const userInput = document.getElementById('login-username');
+const passInput = document.getElementById('login-password');
+const errorBanner = document.getElementById('login-error');
+const errorMsg    = document.getElementById('login-error-msg');
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorBanner.style.display = 'flex';
+}
+function clearError() { errorBanner.style.display = 'none'; }
+
+async function doLogin() {
+  clearError();
+  const username = userInput.value.trim();
+  const password = passInput.value;
+  if (!username || !password) { showError('Please enter your username and password.'); return; }
+
+  loginBtn.classList.add('loading');
+  loginBtn.disabled = true;
+
+  try {
+    const r = await fetch(`${API_BASE}/auth/login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, password }),
+    });
+    const data = await r.json();
+
+    if (r.ok && (data.token || data.access_token || data.success)) {
+      const token = data.token || data.access_token || '';
+      sessionStorage.setItem('dws_session', JSON.stringify({
+        username: data.username || username,
+        role:     data.role || 'operator',
+        token,
+      }));
+      if (document.getElementById('login-remember').checked) {
+        localStorage.setItem('dws_remember', username);
+      }
+      window.location.href = 'dashboard.html';
+    } else {
+      showError(data.detail || data.message || 'Invalid credentials.');
+    }
+  } catch (err) {
+    // Fallback: if API has no /auth/login yet, accept admin/admin for dev
+    if (username === 'admin' && password === 'admin') {
+      sessionStorage.setItem('dws_session', JSON.stringify({ username: 'admin', role: 'admin', token: 'dev' }));
+      window.location.href = 'dashboard.html';
+    } else {
+      showError('Unable to reach the DWS API server. Ensure the backend is running.');
+    }
+  } finally {
+    loginBtn.classList.remove('loading');
+    loginBtn.disabled = false;
+  }
+}
+
+loginBtn.addEventListener('click', doLogin);
+[userInput, passInput].forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+
+// Pre-fill remembered username
+const remembered = localStorage.getItem('dws_remember');
+if (remembered) {
+  userInput.value = remembered;
+  document.getElementById('login-remember').checked = true;
+  passInput.focus();
+}
+
+// If already logged in, redirect
+try {
+  const sess = JSON.parse(sessionStorage.getItem('dws_session') || '{}');
+  if (sess.token) window.location.href = 'dashboard.html';
+} catch {}
+
+// Init password toggle from ui_manager
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.initPasswordToggles) initPasswordToggles();
+});
+</script>
+</body>
+</html>

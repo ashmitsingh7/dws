@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Settings</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Station configuration — General, Hardware, Vision, Measurement, Database, Network, Appearance &amp; Developer</p>
+      <div class="page-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-settings-reset">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.18"/></svg>
+          Reload
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-layout">
+      <!-- Section nav -->
+      <nav class="settings-nav" id="settings-nav" aria-label="Settings sections">
+        <button class="settings-nav-item active" data-panel="general"><span class="icon icon-md"><svg><use href="#icon-settings"/></svg></span> General</button>
+        <button class="settings-nav-item" data-panel="hardware"><span class="icon icon-md"><svg><use href="#icon-cpu"/></svg></span> Hardware</button>
+        <button class="settings-nav-item" data-panel="vision"><span class="icon icon-md"><svg><use href="#icon-camera"/></svg></span> Vision</button>
+        <button class="settings-nav-item" data-panel="measurement"><span class="icon icon-md"><svg><use href="#icon-scale"/></svg></span> Measurement</button>
+        <button class="settings-nav-item" data-panel="database"><span class="icon icon-md"><svg><use href="#icon-storage"/></svg></span> Database</button>
+        <button class="settings-nav-item" data-panel="network"><span class="icon icon-md"><svg><use href="#icon-network"/></svg></span> Network</button>
+        <button class="settings-nav-item" data-panel="appearance"><span class="icon icon-md"><svg><use href="#icon-layers"/></svg></span> Appearance</button>
+        <button class="settings-nav-item" data-panel="developer"><span class="icon icon-md"><svg><use href="#icon-diagnostics"/></svg></span> Developer</button>
+      </nav>
+
+      <!-- Panels -->
+      <div id="settings-panels">
+        <section class="settings-panel active" data-panel="general"></section>
+        <section class="settings-panel" data-panel="hardware"></section>
+        <section class="settings-panel" data-panel="vision"></section>
+        <section class="settings-panel" data-panel="measurement"></section>
+        <section class="settings-panel" data-panel="database"></section>
+        <section class="settings-panel" data-panel="network"></section>
+        <section class="settings-panel" data-panel="appearance"></section>
+        <section class="settings-panel" data-panel="developer"></section>
+
+        <div class="settings-savebar" id="settings-savebar">
+          <span class="savebar-text" id="savebar-text">All changes saved</span>
+          <button class="btn btn-secondary" id="btn-settings-discard" disabled>Discard</button>
+          <button class="btn btn-primary" id="btn-settings-save" disabled>Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/toast_manager.js"></script>
+<script src="js/modal_manager.js"></script>
+<script src="js/loading_manager.js"></script>
+<script src="js/component_library.js"></script>
+<script src="js/form_components.js"></script>
+<script src="js/page_router.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/settings.js"></script>
+<script>
+'use strict';
+PageRouter.requirePermission('settings.write');
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('settings');
+  DWSShell.init('settings');
+  DWSSettings.init();
+});
+</script>
+</body>
+</html>

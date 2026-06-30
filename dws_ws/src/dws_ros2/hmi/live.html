@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Live Scan</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/live.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Live Scan</h1>
+      <p class="page-subtitle">Real-time measurement console — Station #1</p>
+      <div class="page-actions">
+        <span class="conn-pill offline" id="ws-conn"><span class="conn-dot"></span><span id="ws-conn-text">Connecting…</span></span>
+        <span id="live-state-badge"></span>
+        <div class="flex-1"></div>
+        <button class="btn btn-ghost btn-sm" id="btn-tare" title="Software tare is disabled (legal-metrology constraint)" disabled style="opacity:0.4;cursor:not-allowed;">
+          <svg class="icon icon-sm"><use href="#icon-refresh"/></svg> Tare Scale
+        </button>
+      </div>
+    </div>
+
+    <!-- FSM pipeline -->
+    <div class="fsm" id="fsm-pipeline" style="margin-bottom:var(--sp-4);">
+      <div class="fsm-state" data-state="idle">Idle</div>
+      <div class="fsm-state" data-state="detect">Detect</div>
+      <div class="fsm-state" data-state="measure">Measure</div>
+      <div class="fsm-state" data-state="weigh">Weigh</div>
+      <div class="fsm-state" data-state="scan">Scan</div>
+      <div class="fsm-state" data-state="lock">Lock</div>
+      <div class="fsm-state" data-state="complete">Complete</div>
+    </div>
+
+    <div class="live-layout">
+      <!-- LEFT: camera + measurements -->
+      <div class="live-col">
+        <div class="live-stage">
+          <div class="live-stage-header">
+            <span class="live-stage-title">
+              <svg class="icon icon-sm"><use href="#icon-camera"/></svg> Depth Vision — RealSense D455
+            </span>
+            <span id="feed-badge"><span class="status-badge offline">Offline</span></span>
+          </div>
+          <div class="live-viewport" id="live-viewport">
+            <div class="live-viewport-reticle"></div>
+            <div class="live-viewport-badges">
+              <span class="status-badge processing" id="viewport-live-badge" style="display:none;">Live</span>
+            </div>
+            <div class="live-viewport-offline" id="live-viewport-offline">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Waiting for camera stream…<br>Ensure the backend vision node is running.</span>
+            </div>
+          </div>
+          <div class="live-metrics">
+            <div class="live-metric" id="m-length"><div class="live-metric-label">Length</div><div class="live-metric-value" id="v-length">—</div><div class="live-metric-unit">cm</div></div>
+            <div class="live-metric" id="m-width"><div class="live-metric-label">Width</div><div class="live-metric-value" id="v-width">—</div><div class="live-metric-unit">cm</div></div>
+            <div class="live-metric" id="m-height"><div class="live-metric-label">Height</div><div class="live-metric-value" id="v-height">—</div><div class="live-metric-unit">cm</div></div>
+            <div class="live-metric" id="m-weight"><div class="live-metric-label">Weight</div><div class="live-metric-value" id="v-weight">—</div><div class="live-metric-unit">kg</div></div>
+            <div class="live-metric" id="m-volume"><div class="live-metric-label">Volume</div><div class="live-metric-value" id="v-volume">—</div><div class="live-metric-unit">litres</div></div>
+            <div class="live-metric" id="m-dimweight"><div class="live-metric-label">Dim Weight</div><div class="live-metric-value" id="v-dimweight">—</div><div class="live-metric-unit">kg</div></div>
+          </div>
+        </div>
+
+        <!-- AWB -->
+        <div class="awb-display">
+          <span class="awb-icon"><svg class="icon icon-md"><use href="#icon-barcode"/></svg></span>
+          <div class="awb-text">
+            <div class="awb-label">Air Waybill / Barcode</div>
+            <div class="awb-value empty" id="awb-value">No barcode read</div>
+          </div>
+          <span id="awb-badge"></span>
+        </div>
+
+        <!-- Control deck -->
+        <div class="live-controls">
+          <button class="btn btn-industrial start" id="btn-start">
+            <svg class="icon icon-md"><use href="#icon-play"/></svg> Start Pipeline
+          </button>
+          <button class="btn btn-industrial stop" id="btn-stop" disabled>
+            <svg class="icon icon-md"><use href="#icon-stop"/></svg> Stop
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: status + recent -->
+      <div class="live-col">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Pipeline Status</span><span id="pipeline-mode" class="pill">Manual</span></div>
+          <div class="panel-body">
+            <div class="kv-list">
+              <div class="kv-row"><span class="kv-key">Current State</span><span class="kv-val mono" id="kv-state">IDLE</span></div>
+              <div class="kv-row"><span class="kv-key">Last Lock</span><span class="kv-val mono" id="kv-lastlock">—</span></div>
+              <div class="kv-row"><span class="kv-key">Confidence</span><span class="kv-val mono" id="kv-confidence">—</span></div>
+              <div class="kv-row"><span class="kv-key">Session Scans</span><span class="kv-val mono" id="kv-session">0</span></div>
+              <div class="kv-row"><span class="kv-key">Calibration</span><span class="kv-val" id="kv-cal"><span class="status-badge offline">Unknown</span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Recent Locks</span>
+            <a class="btn btn-ghost btn-sm" href="transactions.html">View all</a>
+          </div>
+          <div id="recent-rail">
+            <div class="empty-state" style="padding:var(--sp-8) var(--sp-4);">
+              <div class="empty-state-sub">No locks yet this session</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/toast_manager.js"></script>
+<script src="js/modal_manager.js"></script>
+<script src="js/loading_manager.js"></script>
+<script src="js/component_library.js"></script>
+<script src="js/page_router.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/live.js"></script>
+<script>
+'use strict';
+PageRouter.requirePermission('live_scan.view');
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('live');
+  DWSShell.init('live');
+  DWSLive.init();
+});
+</script>
+</body>
+</html>

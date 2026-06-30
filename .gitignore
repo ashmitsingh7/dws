@@ -1,0 +1,71 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+**/.venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+install/
+log/
+coverage/
+
+# ROS2
+build/
+install/
+log/
+
+# Electron
+electron/dist/
+electron/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime
+captures/
+recordings/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.tmp
+
+# Runtime folders
+.dws/
+.local/
+
+# Calibration outputs
+*.bag
+
+# Python caches
+.pytest_cache/
+.mypy_cache/
+
+# GitHub
+.github/
+
+# Misc
+*.bak
+*.orig

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Diagnostics</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/diagnostics.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Diagnostics</h1>
+      <p class="page-subtitle">Live system health, resource utilisation, and recent error feed</p>
+      <div class="page-actions">
+        <span class="auto-refresh-pill"><span class="auto-refresh-dot"></span> Auto-refresh — <span id="refresh-countdown">5s</span></span>
+        <span id="overall-health-badge"></span>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-now">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.18"/></svg>
+          Refresh Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Component health grid -->
+    <div class="diag-health-grid" id="diag-health-grid">
+      <!-- populated by diagnostics.js: Camera, Scale, Barcode, Database, API, ROS2 -->
+    </div>
+
+    <div class="diag-grid" style="margin-bottom:var(--sp-4);">
+      <!-- Live MJPEG feed -->
+      <div class="diag-col-4">
+        <div class="diag-feed-card">
+          <div class="diag-feed-header">
+            <span class="diag-feed-title">
+              <svg class="icon icon-sm"><use href="#icon-camera"/></svg> Live Camera
+            </span>
+            <span id="vision-status-badge"></span>
+          </div>
+          <div class="diag-feed-viewport" id="diag-feed-viewport">
+            <div class="diag-feed-offline" id="diag-feed-offline">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Connecting to camera feed…
+            </div>
+            <div class="diag-feed-badges">
+              <span class="status-badge processing" id="feed-live-badge" style="display:none;">Live</span>
+            </div>
+          </div>
+          <div class="diag-feed-meta">
+            <div class="meta-cell"><div class="m-label">Resolution</div><div class="m-val" id="feed-resolution">—</div></div>
+            <div class="meta-cell"><div class="m-label">FPS</div><div class="m-val" id="feed-fps">—</div></div>
+            <div class="meta-cell"><div class="m-label">Depth Range</div><div class="m-val" id="feed-depth">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource utilisation gauges -->
+      <div class="diag-col-4">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);height:100%;">
+          <div class="resource-card">
+            <canvas id="gauge-cpu"></canvas>
+            <span class="resource-name">CPU</span>
+            <span class="resource-detail" id="cpu-detail">—</span>
+          </div>
+          <div class="resource-card">
+            <canvas id="gauge-ram"></canvas>
+            <span class="resource-name">RAM</span>
+            <span class="resource-detail" id="ram-detail">—</span>
+          </div>
+          <div class="resource-card">
+            <canvas id="gauge-disk"></canvas>
+            <span class="resource-name">Disk</span>
+            <span class="resource-detail" id="disk-detail">—</span>
+          </div>
+          <div class="resource-card">
+            <canvas id="gauge-network"></canvas>
+            <span class="resource-name">Network</span>
+            <span class="resource-detail" id="network-detail">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Latest parcel -->
+      <div class="diag-col-4">
+        <div class="form-section" style="height:100%;">
+          <div class="form-section-header">
+            <span class="icon icon-md text-secondary"><svg><use href="#icon-package"/></svg></span>
+            <span class="form-section-title" style="flex:1;">Latest Parcel</span>
+            <span id="latest-parcel-badge"></span>
+          </div>
+          <div class="form-section-body" id="latest-parcel-body">
+            <div class="latest-parcel-empty">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span>Waiting for the next scan…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent errors -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <span class="table-title">Recent Errors</span>
+        <div class="table-toolbar-spacer"></div>
+        <span class="text-secondary text-sm" id="error-count">0 in last hour</span>
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='logs.html#errors'">View All</button>
+      </div>
+      <div id="recent-errors-list">
+        <div class="error-row"><span class="error-msg text-tertiary" style="text-align:center;width:100%;padding:24px 0;">Loading recent errors…</span></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/toast_manager.js"></script>
+<script src="js/modal_manager.js"></script>
+<script src="js/loading_manager.js"></script>
+<script src="js/chart_manager.js"></script>
+<script src="js/component_library.js"></script>
+<script src="js/page_router.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/diagnostics.js"></script>
+<script>
+'use strict';
+PageRouter.requireAuth();
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('diagnostics');
+  DWSShell.init('diagnostics');
+  DWSDiagnostics.init();
+});
+document.getElementById('btn-refresh-now').addEventListener('click', () => DWSDiagnostics.refreshNow());
+</script>
+</body>
+</html>

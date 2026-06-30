@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Transactions</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .tx-layout { display: grid; grid-template-columns: 1fr 360px; gap: var(--sp-4); align-items: start; }
+    @media (max-width: 1200px) { .tx-layout { grid-template-columns: 1fr; } .tx-detail-col { display: none; } }
+    .filter-bar { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: flex-end; margin-bottom: var(--sp-4); }
+    .filter-bar .form-group { min-width: 160px; }
+    .filter-bar .form-group label { font-size: var(--text-xs); }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Transactions</h1>
+      <p class="page-subtitle">Full scan history with measurements, barcodes, and export</p>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="form-group">
+        <label class="form-label">From</label>
+        <input type="datetime-local" id="filter-from" class="form-control" style="height:36px;font-size:var(--text-sm);">
+      </div>
+      <div class="form-group">
+        <label class="form-label">To</label>
+        <input type="datetime-local" id="filter-to" class="form-control" style="height:36px;font-size:var(--text-sm);">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="filter-status" class="form-control" style="height:36px;font-size:var(--text-sm);">
+          <option value="">All</option>
+          <option value="ok">OK</option>
+          <option value="error">Error</option>
+          <option value="warning">Warning</option>
+          <option value="near_oos">Near OOS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operator</label>
+        <input type="text" id="filter-operator" class="form-control" placeholder="Any" style="height:36px;font-size:var(--text-sm);min-width:140px;">
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="_applyFilters()" style="align-self:flex-end;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Apply
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="_clearFilters()" style="align-self:flex-end;">Clear</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-secondary btn-sm" onclick="_exportCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="_exportPDF()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export PDF
+      </button>
+    </div>
+
+    <!-- Main layout -->
+    <div class="tx-layout">
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span class="table-title">Scan Records</span>
+          <div class="table-search">
+            <span class="search-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input id="tx-search" type="search" placeholder="Search barcode, ID…" aria-label="Search transactions">
+          </div>
+          <div class="table-toolbar-spacer"></div>
+          <span class="text-secondary text-sm" id="tx-count" style="white-space:nowrap;">0 records</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadTransactions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.18"/></svg>
+          </button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="tx-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-col="id">ID</th>
+                <th class="sortable" data-col="barcode">Barcode</th>
+                <th>L × W × H (cm)</th>
+                <th class="sortable" data-col="weight_kg">Weight</th>
+                <th class="sortable" data-col="volume_cm3">Volume</th>
+                <th>Status</th>
+                <th>Operator</th>
+                <th class="sortable" data-col="timestamp">Time</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tx-tbody">
+              <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--clr-text-tertiary);">Loading transactions…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-pagination" id="tx-pagination">
+          <span class="pagination-info">—</span>
+          <div class="pagination-controls"></div>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="tx-detail-col">
+        <div class="parcel-detail" id="tx-detail-panel" style="display:none;">
+          <div class="parcel-detail-header">
+            <div>
+              <div class="fw-semibold" id="detail-title">Transaction #—</div>
+              <div class="parcel-detail-id" id="detail-barcode">—</div>
+            </div>
+            <span id="detail-status-badge"></span>
+          </div>
+          <div class="parcel-dims-grid">
+            <div class="parcel-dim-cell">
+              <div class="parcel-dim-label">Length</div>
+              <div class="parcel-dim-value" id="detail-length">—</div>
+              <div class="parcel-dim-unit">cm</div>
+            </div>
+            <div class="parcel-dim-cell">
+              <div class="parcel-dim-label">Width</div>
+              <div class="parcel-dim-value" id="detail-width">—</div>
+              <div class="parcel-dim-unit">cm</div>
+            </div>
+            <div class="parcel-dim-cell">
+              <div class="parcel-dim-label">Height</div>
+              <div class="parcel-dim-value" id="detail-height">—</div>
+              <div class="parcel-dim-unit">cm</div>
+            </div>
+            <div class="parcel-dim-cell">
+              <div class="parcel-dim-label">Weight</div>
+              <div class="parcel-dim-value" id="detail-weight">—</div>
+              <div class="parcel-dim-unit">kg</div>
+            </div>
+          </div>
+          <div style="padding:var(--sp-4);">
+            <div class="kv-list">
+              <div class="kv-row"><span class="kv-key">Volume</span><span class="kv-val mono" id="detail-volume">—</span></div>
+              <div class="kv-row"><span class="kv-key">Dim Weight</span><span class="kv-val mono" id="detail-dimweight">—</span></div>
+              <div class="kv-row"><span class="kv-key">Operator</span><span class="kv-val" id="detail-operator">—</span></div>
+              <div class="kv-row"><span class="kv-key">Timestamp</span><span class="kv-val mono" id="detail-ts">—</span></div>
+              <div class="kv-row"><span class="kv-key">Confidence</span><span class="kv-val mono" id="detail-confidence">—</span></div>
+              <div class="kv-row"><span class="kv-key">Session ID</span><span class="kv-val mono" id="detail-session">—</span></div>
+            </div>
+
+            <div style="margin-top:var(--sp-4);display:flex;gap:var(--sp-2);">
+              <button class="btn btn-secondary btn-sm" onclick="_downloadTxPdf()" style="flex:1;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                PDF
+              </button>
+              <button class="btn btn-ghost btn-sm" id="detail-close-btn" style="flex:1;" onclick="_closeDetail()">Close</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholder when nothing selected -->
+        <div class="detail-panel" id="tx-detail-placeholder">
+          <div class="detail-panel-body">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="empty-state-title">Select a transaction</div>
+              <div class="empty-state-sub">Click any row to view measurement details</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Transaction detail modal (for mobile) -->
+<div class="modal-overlay" id="tx-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="tx-modal-title">Transaction</h3>
+      <button class="modal-close" onclick="DWS_UI.Modal.close('tx-modal')" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="tx-modal-body"></div>
+  </div>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/shell.js"></script>
+<script>
+'use strict';
+
+// Auth guard
+(function() {
+  try { const s = JSON.parse(sessionStorage.getItem('dws_session')||'{}'); if (!s.token) window.location.href='login.html'; } catch { window.location.href='login.html'; }
+})();
+
+const API_BASE = `http://${window.location.hostname}:8000`;
+let allTx      = [];
+let filteredTx = [];
+let sortCol    = 'timestamp';
+let sortDir    = 'desc';
+let currentPage = 1;
+const PAGE_SIZE  = 25;
+let selectedTx   = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('transactions');
+  DWSShell.init('transactions');
+  loadTransactions();
+
+  // Search
+  document.getElementById('tx-search').addEventListener('input', () => {
+    currentPage = 1;
+    _filterAndRender();
+  });
+
+  // Sortable headers
+  document.querySelectorAll('#tx-table thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-col');
+      if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortCol = col; sortDir = 'desc'; }
+      currentPage = 1;
+      _renderTable();
+      _updateSortUI();
+    });
+  });
+});
+
+async function loadTransactions() {
+  const tbody = document.getElementById('tx-tbody');
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--clr-text-tertiary);">Loading…</td></tr>`;
+  try {
+    const r = await fetch(`${API_BASE}/transactions?limit=1000`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    allTx = Array.isArray(data) ? data : (data.transactions || []);
+    currentPage = 1;
+    _filterAndRender();
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--clr-text-tertiary);">Failed to load — backend offline</td></tr>`;
+  }
+}
+
+function _applyFilters() { currentPage = 1; _filterAndRender(); }
+function _clearFilters() {
+  document.getElementById('filter-from').value = '';
+  document.getElementById('filter-to').value = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-operator').value = '';
+  currentPage = 1;
+  _filterAndRender();
+}
+
+function _filterAndRender() {
+  const search   = document.getElementById('tx-search').value.trim().toLowerCase();
+  const fromVal  = document.getElementById('filter-from').value;
+  const toVal    = document.getElementById('filter-to').value;
+  const statusF  = document.getElementById('filter-status').value;
+  const opF      = document.getElementById('filter-operator').value.trim().toLowerCase();
+  const fromMs   = fromVal ? new Date(fromVal).getTime() : 0;
+  const toMs     = toVal   ? new Date(toVal).getTime()   : Infinity;
+
+  filteredTx = allTx.filter(tx => {
+    const ts = new Date(tx.timestamp || 0).getTime();
+    if (ts < fromMs || ts > toMs) return false;
+    if (statusF && tx.status !== statusF) return false;
+    if (opF && !(tx.operator||'').toLowerCase().includes(opF)) return false;
+    if (search) {
+      const bc = (tx.barcode||'').toLowerCase();
+      const id = String(tx.id||'');
+      if (!bc.includes(search) && !id.includes(search)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('tx-count').textContent = `${filteredTx.length} record${filteredTx.length !== 1 ? 's' : ''}`;
+  _renderTable();
+}
+
+function _renderTable() {
+  // Sort
+  filteredTx.sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
+    const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const total      = filteredTx.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage      = Math.min(currentPage, totalPages);
+  const start      = (currentPage - 1) * PAGE_SIZE;
+  const page       = filteredTx.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('tx-tbody');
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--clr-text-tertiary);">No records match your filters</td></tr>`;
+  } else {
+    tbody.innerHTML = page.map(tx => {
+      const l = (tx.length_cm||0).toFixed(1), w = (tx.width_cm||0).toFixed(1), h = (tx.height_cm||0).toFixed(1);
+      const wt = parseFloat(tx.weight_kg||0).toFixed(2);
+      const vol = tx.volume_cm3 ? (tx.volume_cm3/1000).toFixed(2)+' L' : '—';
+      const ts  = tx.timestamp ? new Date(tx.timestamp).toLocaleString() : '—';
+      const status = tx.status||'ok';
+      const badge = _statusBadge(status);
+      const sel = selectedTx?.id === tx.id ? 'selected' : '';
+      return `<tr class="${sel}" onclick="_selectTx(${tx.id})" style="cursor:pointer;">
+        <td class="mono">#${tx.id}</td>
+        <td class="mono truncate" style="max-width:160px;" title="${_esc(tx.barcode||'')}">${_esc(tx.barcode||'—')}</td>
+        <td class="mono">${l}×${w}×${h}</td>
+        <td class="mono">${wt} kg</td>
+        <td class="mono">${vol}</td>
+        <td>${badge}</td>
+        <td class="dim">${_esc(tx.operator||'—')}</td>
+        <td class="dim">${ts}</td>
+        <td class="td-actions">
+          <button class="btn btn-ghost btn-sm btn-icon" title="Download PDF" onclick="event.stopPropagation();_downloadTxPdfById(${tx.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  _renderPagination(total, totalPages, start);
+}
+
+function _selectTx(id) {
+  selectedTx = filteredTx.find(t => t.id === id) || null;
+  _renderTable();
+  if (selectedTx) _showDetail(selectedTx);
+}
+
+function _showDetail(tx) {
+  const panel = document.getElementById('tx-detail-panel');
+  const placeholder = document.getElementById('tx-detail-placeholder');
+  if (panel) panel.style.display = '';
+  if (placeholder) placeholder.style.display = 'none';
+
+  document.getElementById('detail-title').textContent = `Transaction #${tx.id}`;
+  document.getElementById('detail-barcode').textContent = tx.barcode || '—';
+  document.getElementById('detail-status-badge').innerHTML = _statusBadge(tx.status||'ok');
+  document.getElementById('detail-length').textContent   = (tx.length_cm||0).toFixed(1);
+  document.getElementById('detail-width').textContent    = (tx.width_cm||0).toFixed(1);
+  document.getElementById('detail-height').textContent   = (tx.height_cm||0).toFixed(1);
+  document.getElementById('detail-weight').textContent   = (tx.weight_kg||0).toFixed(2);
+  document.getElementById('detail-volume').textContent   = tx.volume_cm3 ? (tx.volume_cm3/1000).toFixed(3) + ' L' : '—';
+  const dw = tx.volume_cm3 ? (tx.volume_cm3 / 5000).toFixed(2) + ' kg' : '—';
+  document.getElementById('detail-dimweight').textContent  = dw;
+  document.getElementById('detail-operator').textContent   = tx.operator || '—';
+  document.getElementById('detail-ts').textContent         = tx.timestamp ? new Date(tx.timestamp).toLocaleString() : '—';
+  document.getElementById('detail-confidence').textContent = tx.confidence != null ? (tx.confidence * 100).toFixed(1) + '%' : '—';
+  document.getElementById('detail-session').textContent    = tx.session_id || '—';
+}
+
+function _closeDetail() {
+  selectedTx = null;
+  document.getElementById('tx-detail-panel').style.display = 'none';
+  document.getElementById('tx-detail-placeholder').style.display = '';
+  _renderTable();
+}
+
+function _renderPagination(total, totalPages, start) {
+  const pag = document.getElementById('tx-pagination');
+  if (!pag) return;
+  const end = start + PAGE_SIZE;
+  pag.innerHTML = `
+    <span class="pagination-info">${total===0?'No records':`${start+1}–${Math.min(end,total)} of ${total}`}</span>
+    <div class="pagination-controls" id="tx-pag-controls"></div>
+  `;
+  const ctrl = pag.querySelector('.pagination-controls');
+  const mk = (label, disabled, page) => {
+    const b = document.createElement('button');
+    b.className = 'pagination-btn' + (page===currentPage?' active':'');
+    b.textContent = label; b.disabled = disabled;
+    if (!disabled) b.addEventListener('click', () => { currentPage=page; _renderTable(); });
+    return b;
+  };
+  ctrl.appendChild(mk('‹', currentPage<=1, currentPage-1));
+  let pages = totalPages<=7 ? Array.from({length:totalPages},(_,i)=>i+1) : [1];
+  if (totalPages>7) {
+    const lo=Math.max(2,currentPage-1), hi=Math.min(totalPages-1,currentPage+1);
+    if(lo>2) pages.push('…');
+    for(let p=lo;p<=hi;p++) pages.push(p);
+    if(hi<totalPages-1) pages.push('…');
+    pages.push(totalPages);
+  }
+  pages.forEach(p => {
+    if(p==='…'){const s=document.createElement('span');s.textContent='…';s.style.cssText='padding:0 6px;color:var(--clr-text-tertiary);align-self:center;';ctrl.appendChild(s);}
+    else ctrl.appendChild(mk(String(p),false,p));
+  });
+  ctrl.appendChild(mk('›', currentPage>=totalPages, currentPage+1));
+}
+
+function _updateSortUI() {
+  document.querySelectorAll('#tx-table thead th').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.getAttribute('data-col')===sortCol) th.classList.add('sort-'+sortDir);
+  });
+}
+
+function _statusBadge(status) {
+  const map = { ok:'online',success:'online',error:'error',warning:'warning',near_oos:'warning',failed:'error' };
+  const cls = map[status] || 'offline';
+  const labels = { ok:'OK',success:'OK',error:'Error',warning:'Warning',near_oos:'Near OOS',failed:'Failed',online:'OK',offline:'—' };
+  return `<span class="status-badge ${cls}">${labels[status]||status}</span>`;
+}
+
+function _exportCSV() {
+  const headers = 'ID,Barcode,Length_cm,Width_cm,Height_cm,Weight_kg,Volume_cm3,Status,Operator,Timestamp';
+  const rows = filteredTx.map(tx =>
+    [tx.id,tx.barcode,tx.length_cm,tx.width_cm,tx.height_cm,tx.weight_kg,tx.volume_cm3,tx.status,tx.operator,tx.timestamp]
+    .map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob([headers+'\n'+rows],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download = `dws-transactions-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function _exportPDF() {
+  const from = document.getElementById('filter-from').value || '';
+  const to   = document.getElementById('filter-to').value   || '';
+  let url = `${API_BASE}/export/pdf`;
+  const params = [];
+  if (from) params.push(`start=${encodeURIComponent(from)}`);
+  if (to)   params.push(`end=${encodeURIComponent(to)}`);
+  if (params.length) url += '?' + params.join('&');
+  window.open(url, '_blank');
+}
+
+function _downloadTxPdf() { if (selectedTx) _downloadTxPdfById(selectedTx.id); }
+function _downloadTxPdfById(id) { window.open(`${API_BASE}/export/transaction/${id}/pdf`, '_blank'); }
+
+function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

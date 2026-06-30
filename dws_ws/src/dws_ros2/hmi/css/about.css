@@ -1,0 +1,109 @@
+/* ============================================================
+   ABOUT / SYSTEM INFO PAGE
+   Build 005.1 — Sprint 4
+   Reuses .panel / .kv-list atoms; adds the identity banner,
+   software-stack rows, and the storage meter.
+   ============================================================ */
+
+/* ── IDENTITY BANNER ──────────────────────────────────────── */
+.about-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  background: var(--clr-bg-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5) var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+.about-banner-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--clr-primary);
+  color: var(--clr-text-inverse);
+}
+.about-banner-text { flex: 1; min-width: 0; }
+.about-banner-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--clr-text-primary);
+  letter-spacing: -0.01em;
+}
+.about-banner-sub {
+  font-size: var(--text-sm);
+  color: var(--clr-text-secondary);
+}
+.about-banner-meta {
+  display: flex;
+  gap: var(--sp-8);
+}
+.about-banner-meta > div { display: flex; flex-direction: column; gap: var(--sp-1); }
+.about-banner-meta-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--clr-text-tertiary);
+}
+.about-banner-meta-val {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--clr-text-primary);
+}
+
+@media (max-width: 720px) {
+  .about-banner { flex-wrap: wrap; }
+  .about-banner-meta { width: 100%; gap: var(--sp-6); }
+}
+
+/* ── CARD GRID ────────────────────────────────────────────── */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .about-grid { grid-template-columns: 1fr; }
+}
+
+.about-copyright {
+  margin-top: var(--sp-4);
+  font-size: var(--text-xs);
+  color: var(--clr-text-tertiary);
+}
+
+/* ── STACK BADGE ──────────────────────────────────────────── */
+.stack-tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--clr-text-tertiary);
+}
+
+/* ── STORAGE METER ────────────────────────────────────────── */
+.storage-meter-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--clr-bg-raised);
+  border: 1px solid var(--clr-border);
+  overflow: hidden;
+}
+.storage-meter-fill {
+  height: 100%;
+  background: var(--clr-primary);
+  transition: width var(--dur-slow, 0.4s) ease;
+}
+.storage-meter-fill.warn { background: var(--clr-warning); }
+.storage-meter-fill.crit { background: var(--clr-danger); }
+.storage-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-2);
+  font-size: var(--text-sm);
+  color: var(--clr-text-secondary);
+  font-variant-numeric: tabular-nums;
+}

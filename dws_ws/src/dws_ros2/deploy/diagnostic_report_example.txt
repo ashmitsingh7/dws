@@ -1,0 +1,183 @@
+┌─────────────────────────────────────────────────────────────────┐
+│             DWS SYSTEM — DIAGNOSTIC REPORT                     │
+├─────────────────────────────────────────────────────────────────┤
+│  Generated : 2026-06-25 11:33:51                           │
+│  User      : root                                              │
+│  Host      : vm                                        │
+└─────────────────────────────────────────────────────────────────┘
+
+══════════════════════════════════════════════════════════
+  1. SYSTEM
+══════════════════════════════════════════════════════════
+
+── Operating System
+  Distributor                    Ubuntu
+  Release                        24.04
+  Codename                       noble
+  Description                    Ubuntu 24.04.4 LTS
+
+── Kernel
+  Kernel                         6.18.5
+  Architecture                   x86_64
+  Hostname                       vm
+  Uptime                         up 2 minutes
+
+── CPU
+  Model                          Intel(R) Xeon(R) Processor @ 2.10GHz
+  Cores                          1
+  Threads                        1
+  MHz                            
+
+── RAM
+  Total                          3.9Gi
+  Used                           217Mi
+  Free                           3.8Gi
+
+── Disk
+  Filesystem                                                                         Size  Used Avail Use% Mounted on
+  tmpfs                                                                              2.0G     0  2.0G   0% /dev/shm
+  tmpfs                                                                              2.0G     0  2.0G   0% /sys/fs/cgroup
+  /dev/vda                                                                           252G  8.6G   10G  47% /
+  rclone-filestore:claude_chat_01CDmRyFdAB6xTnwHEuVyD7N:/mnt/user-data/tool_results  1.0P     0  1.0P   0% /mnt/user-data/tool_results
+  rclone-filestore:claude_chat_01CDmRyFdAB6xTnwHEuVyD7N:/mnt/user-data/outputs       1.0P     0  1.0P   0% /mnt/user-data/outputs
+  rclone-filestore:claude_chat_01CDmRyFdAB6xTnwHEuVyD7N:/mnt/user-data/uploads       1.0P     0  1.0P   0% /mnt/user-data/uploads
+  rclone-filestore:claude_chat_01CDmRyFdAB6xTnwHEuVyD7N:/mnt/transcripts             1.0P     0  1.0P   0% /mnt/transcripts
+
+── Load average
+  Load                           0.11 0.03 0.01 2/80 809
+
+── Network interfaces
+
+══════════════════════════════════════════════════════════
+  2. SOFTWARE
+══════════════════════════════════════════════════════════
+
+── Python
+  System python3                 Python 3.12.3
+  Venv python3                   NOT FOUND at /home/claude/dws_finalv7/dws_ws/.venv
+
+── ROS2
+  ROS2                           NOT FOUND at /opt/ros/jazzy
+
+── Key Python libraries (venv)
+  Venv not available — skipping library checks
+
+── System packages
+  librealsense2-dkms             NOT INSTALLED
+  sqlite3                        NOT INSTALLED
+  git                            1:2.43.0-1ubuntu7.3
+  curl                           8.5.0-2ubuntu10.8
+
+── librealsense2 SDK
+  rs-enumerate-devices           not found in PATH
+
+══════════════════════════════════════════════════════════
+  3. HARDWARE
+══════════════════════════════════════════════════════════
+
+── Intel RealSense Camera
+  Status                         Skipped (--no-hardware)
+
+── USB devices
+
+── Serial / Scale
+  No /dev/ttyUSB* or /dev/ttyACM* devices found
+
+── Barcode scanner (evdev input devices)
+  Status                         Skipped (--no-hardware)
+
+══════════════════════════════════════════════════════════
+  4. DWS SYSTEM STATE
+══════════════════════════════════════════════════════════
+
+── Repository
+  Repo root                      /home/claude/dws_finalv7
+  VERSION                        DWS System v1.0
+
+── Configuration
+  Config file                    /home/claude/dws_finalv7/dws_ws/src/dws_ros2/config/dws_params.yaml
+    system:
+      station_id: STATION_01
+      # Developer Mode defaults (Build 005) are intentional for development.
+      # For production deployment, set developer_mode via Settings/API after install.
+      simulation_mode: false
+    
+    scale:
+      serial_port: /dev/ttyUSB0
+      baudrate: 9600
+      publish_rate_hz: 20
+      buffer_size: 20
+      spread_threshold_kg: 0.03
+      std_dev_threshold_kg: 0.012
+      required_stable_windows: 8
+      zero_threshold_kg: 0.05
+    
+    vision:
+      camera_mode: hardware
+      fps: 30
+    
+    database:
+      file: dws_data.db
+      retention_days: 30
+    
+    api:
+      host: 0.0.0.0
+      port: 8000
+    
+    hmi:
+      host: 0.0.0.0
+      websocket_port: 8765
+      http_port: 8090
+      static_port: 8080
+    
+    health:
+      check_interval_seconds: 5
+      min_free_disk_gb: 2.0
+    
+    sync:
+      enabled: false
+      cloud_url: https://api.dws-cloud.example.com/v1/sync
+      poll_interval_seconds: 10
+
+── Runtime directories
+  dws_runtime/database           64K  (3 file(s))
+  dws_runtime/captures           5.5M  (2 file(s))
+  dws_runtime/pointclouds        2.0M  (4 file(s))
+  dws_runtime/calibration        7.5M  (5 file(s))
+  dws_runtime/logs               4.0K  (1 file(s))
+  dws_runtime/backups            4.0K  (1 file(s))
+  dws_runtime/exports            4.0K  (1 file(s))
+
+── SQLite database
+  Path                           /home/claude/dws_finalv7/dws_runtime/database/dws_data.db
+  Size                           60K
+  Mtime                          2026-06-24 05:24:18
+
+── Calibration files
+  stable_empty_depth.npy         3.6M  mtime: 2026-06-24 05:24:12
+  noise_map.npy                  3.6M  mtime: 2026-06-24 05:24:12
+  system_geometry.npy            4.0K  mtime: 2026-06-24 05:24:12
+  calibration_result.jpg         436K  mtime: 2026-06-24 05:24:12
+
+── Active systemd services
+  dws@root.service               not found
+
+── Running ports
+
+── Log file locations
+  install.log                    /home/claude/dws_finalv7/install.log
+  backend.log                    /root/.dws/logs/backend.log
+  api.log                        /root/.dws/logs/api.log
+  hmi.log                        /root/.dws/logs/hmi.log
+  runtime logs                   /home/claude/dws_finalv7/dws_runtime/logs/
+
+  Recent backend log (last 20 lines):
+    (no backend.log found)
+
+══════════════════════════════════════════════════════════
+  END OF DIAGNOSTIC REPORT
+══════════════════════════════════════════════════════════
+
+  Generated : 2026-06-25 11:33:51
+  Saved to  : /home/claude/dws_finalv7/diagnostic_report.txt
+

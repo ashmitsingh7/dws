@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Calibration</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/calibration.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Calibration Verification</h1>
+      <p class="page-subtitle">Operator accuracy check using a known reference parcel — runs every 100 shipments. <em>System calibration (camera geometry, depth noise map) runs automatically at every boot and is not operator-initiated.</em></p>
+      <div class="page-actions">
+        <span id="cal-current-badge"><span class="status-badge offline">—</span></span>
+        <button class="btn btn-ghost btn-sm" id="btn-cal-refresh">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.18"/></svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="cal-grid">
+      <!-- Live preview + current state -->
+      <div class="cal-preview-card">
+        <div class="cal-preview-header">
+          <span class="cal-preview-title">
+            <svg class="icon icon-sm"><use href="#icon-camera"/></svg> Live Preview
+          </span>
+          <span id="cal-feed-badge"><span class="status-badge offline">Idle</span></span>
+        </div>
+        <div class="cal-preview-viewport" id="cal-feed-viewport">
+          <div class="cal-preview-offline" id="cal-feed-offline">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Camera feed idle — start a calibration to begin streaming.
+          </div>
+          <div class="cal-overlay" id="cal-overlay" style="display:none;">
+            <div class="cal-overlay-frame"></div>
+            <span class="cal-overlay-corner tl"></span>
+            <span class="cal-overlay-corner tr"></span>
+            <span class="cal-overlay-corner bl"></span>
+            <span class="cal-overlay-corner br"></span>
+          </div>
+          <div class="cal-preview-badges">
+            <span class="status-badge calibrating" id="cal-live-badge" style="display:none;">Calibrating</span>
+          </div>
+        </div>
+        <div class="cal-preview-meta">
+          <div class="meta-cell"><div class="m-label">Detected Plane</div><div class="m-val" id="cal-plane">—</div></div>
+          <div class="meta-cell"><div class="m-label">Depth RMSE</div><div class="m-val" id="cal-rmse">—</div></div>
+          <div class="meta-cell"><div class="m-label">Samples</div><div class="m-val" id="cal-samples">—</div></div>
+        </div>
+        <div class="cal-state-grid">
+          <div class="cal-state-cell">
+            <div class="cal-state-label">Current Calibration</div>
+            <div class="cal-state-value" id="cal-state-status">Unknown</div>
+          </div>
+          <div class="cal-state-cell">
+            <div class="cal-state-label">Last Calibrated</div>
+            <div class="cal-state-value mono" id="cal-state-when" style="font-size:var(--text-base);">—</div>
+          </div>
+          <div class="cal-state-cell">
+            <div class="cal-state-label">Reference Object</div>
+            <div class="cal-state-value" id="cal-state-ref" style="font-size:var(--text-base);">—</div>
+          </div>
+          <div class="cal-state-cell">
+            <div class="cal-state-label">Residual Error</div>
+            <div class="cal-state-value mono" id="cal-state-error">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wizard -->
+      <div class="cal-wizard">
+        <div class="cal-wizard-header">
+          <span class="cal-wizard-title">Calibration Wizard</span>
+          <span class="pill" id="cal-wizard-state">Ready</span>
+        </div>
+        <div class="cal-wizard-body" id="cal-wizard-body">
+          <!-- populated by calibration.js -->
+        </div>
+        <div class="cal-wizard-footer" id="cal-wizard-footer">
+          <!-- buttons injected by calibration.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <span class="table-title">Calibration History</span>
+        <div class="table-toolbar-spacer"></div>
+        <span class="text-secondary text-sm" id="cal-history-count">—</span>
+        <button class="btn btn-ghost btn-sm" id="btn-cal-export">
+          <svg class="icon icon-sm"><use href="#icon-download"/></svg> Export CSV
+        </button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="cal-history-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date / Time</th>
+              <th>Reference</th>
+              <th>Residual Error</th>
+              <th>Accuracy</th>
+              <th>Operator</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="cal-history-body">
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--clr-text-tertiary);">Loading history…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/toast_manager.js"></script>
+<script src="js/modal_manager.js"></script>
+<script src="js/loading_manager.js"></script>
+<script src="js/component_library.js"></script>
+<script src="js/page_router.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/calibration.js"></script>
+<script>
+'use strict';
+PageRouter.requirePermission('calibration.run');
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('calibration');
+  DWSShell.init('calibration');
+  DWSCalibration.init();
+});
+</script>
+</body>
+</html>

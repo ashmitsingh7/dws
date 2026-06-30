@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0F1923;
+      --surface: #16212E;
+      --accent:  #00B4D8;
+      --dim:     #006480;
+      --text:    #E0E6ED;
+      --muted:   #4A5568;
+    }
+
+    html, body {
+      width: 520px; height: 340px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    /* ── Indeterminate progress bar ───────── */
+    .bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--dim);
+      overflow: hidden;
+    }
+    .bar::after {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 38%;
+      background: var(--accent);
+      animation: slide 1.6s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(370%); }
+    }
+
+    /* ── Step progress bar (shown once steps start) ── */
+    .step-bar {
+      position: absolute;
+      top: 3px; left: 0;
+      height: 2px;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.4s ease;
+      opacity: 0;
+    }
+    .step-bar.visible { opacity: 1; }
+
+    /* ── Layout ─────────────────────────────────── */
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 22px;
+    }
+
+    /* ── Logo ────────────────────────────────────── */
+    .logo { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .logo svg { width: 72px; height: 72px; }
+    .wordmark {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: .14em;
+    }
+    .tagline {
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Status ──────────────────────────────────── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 22px;
+    }
+    .dot {
+      flex-shrink: 0;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.65)} }
+
+    #status {
+      font-size: 12.5px;
+      color: var(--muted);
+      letter-spacing: .04em;
+      transition: opacity .25s ease;
+    }
+    #status.fade { opacity: 0; }
+
+    /* ── Version ─────────────────────────────────── */
+    .version {
+      position: absolute;
+      bottom: 14px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .06em;
+    }
+  </style>
+</head>
+<body>
+  <div class="bar" id="indeterminate-bar"></div>
+  <div class="step-bar" id="step-bar"></div>
+
+  <div class="center">
+    <div class="logo">
+      <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 3-D box -->
+        <rect x="14" y="24" width="40" height="32" rx="2"
+              fill="none" stroke="#00B4D8" stroke-width="2.5"/>
+        <!-- top face -->
+        <polygon points="14,24 22,14 62,14 54,24"
+                 fill="none" stroke="#00B4D8" stroke-width="2" opacity=".55"/>
+        <!-- right face -->
+        <polygon points="54,24 62,14 62,46 54,56"
+                 fill="none" stroke="#00B4D8" stroke-width="2" opacity=".55"/>
+        <!-- scan line -->
+        <line x1="14" y1="40" x2="54" y2="40"
+              stroke="#00B4D8" stroke-width="1.2" opacity=".45" stroke-dasharray="5 3"/>
+        <!-- scale post + platform -->
+        <line x1="36" y1="56" x2="36" y2="64" stroke="#00B4D8" stroke-width="2" stroke-dasharray="2 2"/>
+        <line x1="24" y1="64" x2="48" y2="64" stroke="#00B4D8" stroke-width="2.5"/>
+      </svg>
+      <div class="wordmark">DWS</div>
+      <div class="tagline">Dimensional Weighing System</div>
+    </div>
+
+    <div class="status-row">
+      <div class="dot"></div>
+      <span id="status">Initialising…</span>
+    </div>
+  </div>
+
+  <div class="version">v1.0 &nbsp;·&nbsp; Build 005.1</div>
+
+  <script>
+    const statusEl   = document.getElementById('status');
+    const stepBar    = document.getElementById('step-bar');
+    const indBar     = document.getElementById('indeterminate-bar');
+
+    let _fadeTimer = null;
+
+    /**
+     * Called by window_manager.js via executeJavaScript.
+     * Also called by the startup:progress IPC messages forwarded through
+     * the same executeJavaScript path.
+     */
+    window.__setStatus = function(msg, step, total) {
+      // Fade out → update → fade in
+      statusEl.classList.add('fade');
+      clearTimeout(_fadeTimer);
+      _fadeTimer = setTimeout(function() {
+        statusEl.textContent = msg;
+        statusEl.classList.remove('fade');
+      }, 200);
+
+      // Step progress bar
+      if (step && total) {
+        const pct = Math.round((step / total) * 100);
+        stepBar.style.width = pct + '%';
+        if (!stepBar.classList.contains('visible')) {
+          stepBar.classList.add('visible');
+          indBar.style.display = 'none';
+        }
+        // When complete, keep bar full for a moment
+        if (step >= total) {
+          setTimeout(function() {
+            stepBar.style.width = '100%';
+          }, 100);
+        }
+      }
+    };
+
+    // Also accept the structured progress object
+    window.__setProgress = function(obj) {
+      window.__setStatus(obj.message, obj.step, obj.total);
+    };
+  </script>
+</body>
+</html>

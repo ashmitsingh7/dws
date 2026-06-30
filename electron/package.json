@@ -1,0 +1,109 @@
+{
+  "name": "dws-desktop",
+  "version": "1.0.0",
+  "description": "DWS — Dimensional Weighing System Desktop Application",
+  "productName": "DWS",
+  "author": {
+    "name": "DWS",
+    "email": "support@dws.local"
+  },
+  "homepage": "https://github.com/ashmitsingh7/dws_finalv7",
+  "main": "main.js",
+  "scripts": {
+    "start":           "electron .",
+    "start:dev":       "electron . --dev",
+    "start:no-hw":     "electron . --no-hardware",
+    "start:dev:no-hw": "electron . --dev --no-hardware",
+    "build":           "electron-builder --linux",
+    "build:deb":       "electron-builder --linux deb",
+    "build:appimage":  "electron-builder --linux AppImage",
+    "pack":            "electron-builder --dir",
+    "postinstall":     "electron-builder install-app-deps",
+    "make-icons":      "node scripts/make_placeholder_icons.js",
+    "lint":            "echo 'no linter configured'"
+  },
+  "dependencies": {
+    "electron-log":   "^5.1.2",
+    "electron-store": "^8.1.0",
+    "node-fetch":     "^3.3.2",
+    "ws":             "^8.17.1"
+  },
+  "devDependencies": {
+    "electron":         "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "extends": null,
+    "appId":       "com.dws.desktop",
+    "productName": "DWS",
+    "copyright":   "Copyright © 2026 DWS",
+
+    "linux": {
+      "target": [
+        { "target": "deb",      "arch": ["x64"] },
+        { "target": "AppImage", "arch": ["x64"] }
+      ],
+      "category": "Utility",
+      "desktop": {
+        "Name":       "DWS",
+        "Comment":    "Dimensional Weighing System — automated parcel measurement",
+        "Categories": "Utility;Science;"
+      },
+      "icon": "assets/icons/icon.png",
+
+      "executableArgs": ["--no-sandbox"],
+
+      "artifactName": "${name}_${version}_${arch}.${ext}"
+    },
+
+    "deb": {
+      "synopsis":     "Dimensional Weighing System",
+      "depends":      ["python3", "libusb-1.0-0", "libudev1"],
+      "afterInstall": "scripts/deb-postinst.sh"
+    },
+
+    "files": [
+      "main.js",
+      "preload.js",
+      "process_supervisor.js",
+      "window_manager.js",
+      "tray.js",
+      "health_monitor.js",
+      "logger.js",
+      "ipc_handlers.js",
+      "splash.html",
+      "assets/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+
+    "extraResources": [
+      {
+        "from": "../dws_ws",
+        "to":   "dws_ws",
+        "filter": [
+          "**/*",
+          "!src/**/*.egg-info/**",
+          "!src/**/*.egg-link",
+          "!**/__pycache__/**",
+          "!**/*.pyc",
+          "!build/**",
+          "!log/**",
+          "!install/**",
+          "!.venv/**",
+          "!captures/**",
+          "!*.db"
+        ]
+      }
+    ],
+
+    "directories": {
+      "output":           "dist",
+      "buildResources":   "assets"
+    },
+
+    "asar":        true,
+    "asarUnpack":  ["node_modules/**/*.node"],
+    "compression": "maximum"
+  }
+}

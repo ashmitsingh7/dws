@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — About</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/about.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">About</h1>
+      <p class="page-subtitle">System version &amp; environment</p>
+    </div>
+
+    <!-- Identity banner -->
+    <div class="about-banner">
+      <div class="about-banner-mark">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div class="about-banner-text">
+        <div class="about-banner-title">Dimensioning &amp; Weighing System</div>
+        <div class="about-banner-sub">Delhivery Industrial HMI</div>
+      </div>
+      <div class="about-banner-meta">
+        <div><span class="about-banner-meta-label">Version</span><span class="about-banner-meta-val" id="ab-version">—</span></div>
+        <div><span class="about-banner-meta-label">Build</span><span class="about-banner-meta-val mono" id="ab-build">—</span></div>
+      </div>
+    </div>
+
+    <div class="about-grid">
+      <!-- Software stack -->
+      <section class="panel about-card">
+        <div class="panel-header"><span class="panel-title">Software Stack</span></div>
+        <div class="panel-body">
+          <div class="kv-list" id="stack-list"></div>
+        </div>
+      </section>
+
+      <!-- Machine information -->
+      <section class="panel about-card">
+        <div class="panel-header"><span class="panel-title">Machine</span></div>
+        <div class="panel-body">
+          <div class="kv-list" id="machine-list">
+            <div class="kv-row"><span class="kv-key">Platform</span><span class="kv-val mono" id="m-platform">—</span></div>
+            <div class="kv-row"><span class="kv-key">CPU</span><span class="kv-val mono" id="m-cpu">—</span></div>
+            <div class="kv-row"><span class="kv-key">Memory</span><span class="kv-val mono" id="m-mem">—</span></div>
+            <div class="kv-row"><span class="kv-key">Hostname</span><span class="kv-val mono" id="m-host">—</span></div>
+            <div class="kv-row"><span class="kv-key">User Agent</span><span class="kv-val mono" id="m-ua" style="max-width:180px;text-align:right;word-break:break-all;">—</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Storage -->
+      <section class="panel about-card">
+        <div class="panel-header"><span class="panel-title">Storage</span></div>
+        <div class="panel-body">
+          <div class="storage-meter">
+            <div class="storage-meter-track"><div class="storage-meter-fill" id="storage-fill" style="width:0%"></div></div>
+            <div class="storage-meter-labels">
+              <span id="storage-used">—</span>
+              <span id="storage-free" class="dim">—</span>
+            </div>
+          </div>
+          <div class="kv-list" style="margin-top:var(--sp-3);">
+            <div class="kv-row"><span class="kv-key">Database</span><span class="kv-val mono" id="s-db">—</span></div>
+            <div class="kv-row"><span class="kv-key">Captures</span><span class="kv-val mono" id="s-captures">—</span></div>
+            <div class="kv-row"><span class="kv-key">Point Clouds</span><span class="kv-val mono" id="s-pcl">—</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- License & support -->
+      <section class="panel about-card">
+        <div class="panel-header"><span class="panel-title">License &amp; Support</span></div>
+        <div class="panel-body">
+          <div class="kv-list">
+            <div class="kv-row"><span class="kv-key">License</span><span class="kv-val" id="lic-type">Proprietary — Delhivery Ltd.</span></div>
+            <div class="kv-row"><span class="kv-key">Edition</span><span class="kv-val">Station Runtime</span></div>
+            <div class="kv-row"><span class="kv-key">Support</span><span class="kv-val"><a class="text-link" href="mailto:dws-support@delhivery.com">dws-support@delhivery.com</a></span></div>
+            <div class="kv-row"><span class="kv-key">Documentation</span><span class="kv-val mono">/docs/dws</span></div>
+          </div>
+          <p class="about-copyright">© 2026 Delhivery Ltd. All rights reserved.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/about.js"></script>
+<script>
+'use strict';
+
+// Auth guard
+(function () {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('dws_session') || '{}');
+    if (!s.token) { window.location.href = 'login.html'; }
+  } catch { window.location.href = 'login.html'; }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('about');
+  DWSShell.init('about');
+  DWSAbout.init();
+});
+</script>
+</body>
+</html>

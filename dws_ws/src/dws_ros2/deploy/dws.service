@@ -1,0 +1,31 @@
+[Unit]
+Description=DWS System - Dimensioning, Weighing & Scanning Station
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+# %i is supplied by the instance name, e.g.:
+#   systemctl enable dws@dws-operator.service
+# Run `deploy/install_service.sh` to install this with the correct
+# user and paths filled in automatically rather than editing by hand.
+ExecStart=__DWS_PKG_DIR__/deploy/run.sh foreground
+ExecStop=__DWS_PKG_DIR__/deploy/run.sh stop
+Restart=on-failure
+RestartSec=5
+# Give the backend's own graceful-shutdown path (run_dws.py SIGTERM
+# handler -> KeyboardInterrupt -> finally: block) time to close the DB
+# and stop hardware nodes cleanly before systemd escalates to SIGKILL.
+TimeoutStopSec=30
+KillMode=control-group
+
+Environment=DWS_RUN_DIR=%h/.dws/run
+Environment=DWS_LOG_DIR=%h/.dws/logs
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dws
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,65 @@
+/* ============================================================
+   USER MANAGEMENT PAGE
+   Build 005.1 — Sprint 4
+   Reuses .role-badge / .stat-strip / .data-table atoms. Adds only
+   the user-cell avatar and the permissions matrix table.
+   ============================================================ */
+
+/* ── USER TABLE CELL ──────────────────────────────────────── */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--clr-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  flex-shrink: 0;
+}
+.user-avatar.disabled { background: var(--clr-bg-raised); color: var(--clr-text-tertiary); }
+.user-cell .user-name { font-weight: var(--weight-medium); color: var(--clr-text-primary); }
+.user-cell .user-name.disabled { color: var(--clr-text-tertiary); text-decoration: line-through; }
+.user-cell .user-sub { font-size: var(--text-xs); color: var(--clr-text-tertiary); font-family: var(--font-mono); }
+
+/* ── ROW ACTION BUTTONS ───────────────────────────────────── */
+.user-actions { display: flex; align-items: center; gap: var(--sp-1); justify-content: flex-end; }
+.icon-action {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--clr-text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.icon-action:hover { background: var(--clr-bg-hover); color: var(--clr-text-primary); border-color: var(--clr-border-strong); }
+.icon-action.danger:hover { background: var(--clr-danger-bg); color: var(--clr-danger); border-color: rgba(239,68,68,0.4); }
+
+/* ── PERMISSIONS MATRIX ───────────────────────────────────── */
+.perm-matrix { width: 100%; border-collapse: collapse; font-size: var(--text-base); }
+.perm-matrix th, .perm-matrix td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--clr-border-subtle);
+  text-align: left;
+}
+.perm-matrix th {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--clr-text-tertiary);
+}
+.perm-matrix th.role-col, .perm-matrix td.role-col { text-align: center; width: 110px; }
+.perm-matrix td.perm-name { color: var(--clr-text-primary); }
+.perm-matrix .perm-key { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--clr-text-tertiary); }
+.perm-yes { color: var(--clr-success); }
+.perm-no { color: var(--clr-text-tertiary); opacity: 0.4; }
+.perm-matrix tr:last-child td { border-bottom: none; }

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Reports</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    canvas { display: block; width: 100%; }
+    .chart-canvas { height: 200px; }
+    .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+    @media (max-width: 900px) { .reports-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Reports</h1>
+      <p class="page-subtitle">Operational analytics and shift summaries</p>
+      <div class="page-actions">
+        <!-- Time range buttons -->
+        <div style="display:flex;gap:var(--sp-1);background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:var(--radius-md);padding:3px;">
+          <button class="btn btn-ghost btn-sm range-btn active" data-range="today">Today</button>
+          <button class="btn btn-ghost btn-sm range-btn" data-range="7d">7 Days</button>
+          <button class="btn btn-ghost btn-sm range-btn" data-range="30d">30 Days</button>
+          <button class="btn btn-ghost btn-sm range-btn" data-range="custom">Custom</button>
+        </div>
+        <div id="custom-range-wrap" style="display:none;gap:var(--sp-2);align-items:center;" class="d-flex align-center gap-2">
+          <input type="date" id="rpt-from" class="form-control" style="height:34px;font-size:var(--text-sm);width:150px;">
+          <span class="text-tertiary">–</span>
+          <input type="date" id="rpt-to"   class="form-control" style="height:34px;font-size:var(--text-sm);width:150px;">
+          <button class="btn btn-secondary btn-sm" onclick="loadReports()">Go</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="_exportReport()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export PDF Report
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="stat-strip" id="rpt-kpi-strip" style="grid-template-columns:repeat(5,1fr);">
+      <div class="stat-strip-item">
+        <div class="stat-strip-label">Total Scans</div>
+        <div class="stat-strip-value" id="rpt-total">—</div>
+        <div class="stat-strip-sub" id="rpt-period-label">—</div>
+      </div>
+      <div class="stat-strip-item">
+        <div class="stat-strip-label">Avg Weight</div>
+        <div class="stat-strip-value"><span id="rpt-avg-wt">—</span> <span style="font-size:var(--text-base);font-weight:400;color:var(--clr-text-tertiary)">kg</span></div>
+        <div class="stat-strip-sub">per parcel</div>
+      </div>
+      <div class="stat-strip-item">
+        <div class="stat-strip-label">Avg Volume</div>
+        <div class="stat-strip-value"><span id="rpt-avg-vol">—</span> <span style="font-size:var(--text-base);font-weight:400;color:var(--clr-text-tertiary)">L</span></div>
+        <div class="stat-strip-sub">per parcel</div>
+      </div>
+      <div class="stat-strip-item">
+        <div class="stat-strip-label">Peak Hour</div>
+        <div class="stat-strip-value" id="rpt-peak">—</div>
+        <div class="stat-strip-sub">highest throughput</div>
+      </div>
+      <div class="stat-strip-item">
+        <div class="stat-strip-label">Error Rate</div>
+        <div class="stat-strip-value" id="rpt-error-rate" style="color:var(--clr-danger)">—</div>
+        <div class="stat-strip-sub">of total scans</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="reports-grid" style="margin-bottom:var(--sp-4);">
+      <!-- Throughput over time -->
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <span class="chart-title">Scans Per Hour</span>
+          <div class="chart-legend">
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--clr-primary)"></div>Volume</div>
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--clr-danger)"></div>Errors</div>
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas id="chart-throughput" class="chart-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Weight distribution -->
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <span class="chart-title">Weight Distribution</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chart-weight" class="chart-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Volume distribution -->
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <span class="chart-title">Volume Distribution (L)</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chart-volume" class="chart-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Status breakdown -->
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <span class="chart-title">Status Breakdown</span>
+        </div>
+        <div class="chart-body" style="display:flex;align-items:center;justify-content:center;min-height:200px;">
+          <canvas id="chart-status" width="200" height="200" style="width:180px;height:180px;"></canvas>
+          <div id="chart-status-legend" style="margin-left:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-2);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Operators Table -->
+    <div class="table-wrap" style="margin-bottom:var(--sp-4);">
+      <div class="table-toolbar">
+        <span class="table-title">By Operator</span>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Operator</th><th>Scans</th><th>Errors</th><th>Error Rate</th><th>Avg Weight (kg)</th><th>Avg Volume (L)</th></tr></thead>
+        <tbody id="rpt-operator-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--clr-text-tertiary);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Hourly breakdown table -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <span class="table-title">Hourly Breakdown</span>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Hour</th><th>Scans</th><th>Errors</th><th>Avg Weight (kg)</th><th>Avg Volume (L)</th></tr></thead>
+        <tbody id="rpt-hourly-tbody">
+          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--clr-text-tertiary);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/shell.js"></script>
+<script>
+'use strict';
+(function(){ try{ const s=JSON.parse(sessionStorage.getItem('dws_session')||'{}'); if(!s.token) window.location.href='login.html'; }catch{ window.location.href='login.html'; } })();
+
+const API_BASE = `http://${window.location.hostname}:8000`;
+let currentRange = 'today';
+let reportData = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('reports');
+  DWSShell.init('reports');
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentRange = btn.getAttribute('data-range');
+      const cw = document.getElementById('custom-range-wrap');
+      cw.style.display = currentRange === 'custom' ? 'flex' : 'none';
+      if (currentRange !== 'custom') loadReports();
+    });
+  });
+  loadReports();
+});
+
+function _dateRange() {
+  const now  = new Date();
+  let from, to = now.toISOString();
+  if (currentRange === 'today') {
+    from = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  } else if (currentRange === '7d') {
+    from = new Date(Date.now() - 7*86400000).toISOString();
+  } else if (currentRange === '30d') {
+    from = new Date(Date.now() - 30*86400000).toISOString();
+  } else {
+    from = document.getElementById('rpt-from').value ? new Date(document.getElementById('rpt-from').value).toISOString() : new Date(Date.now()-86400000).toISOString();
+    to   = document.getElementById('rpt-to').value   ? new Date(document.getElementById('rpt-to').value).toISOString()   : to;
+  }
+  return { from, to };
+}
+
+async function loadReports() {
+  try {
+    const r = await fetch(`${API_BASE}/transactions?limit=5000`);
+    const data = await r.json();
+    let all = Array.isArray(data) ? data : (data.transactions||[]);
+    const { from, to } = _dateRange();
+    const fromMs = new Date(from).getTime();
+    const toMs   = new Date(to).getTime();
+    reportData = all.filter(tx => {
+      const ts = new Date(tx.timestamp||0).getTime();
+      return ts >= fromMs && ts <= toMs;
+    });
+    _buildKPIs();
+    _buildCharts();
+    _buildOperatorTable();
+    _buildHourlyTable();
+    const label = { today:'Today', '7d':'Last 7 days', '30d':'Last 30 days', custom:'Custom range' };
+    document.getElementById('rpt-period-label').textContent = label[currentRange]||currentRange;
+  } catch {
+    document.getElementById('rpt-total').textContent = '—';
+  }
+}
+
+function _buildKPIs() {
+  const d = reportData;
+  document.getElementById('rpt-total').textContent = d.length;
+  const weights = d.map(t=>parseFloat(t.weight_kg||0)).filter(w=>w>0);
+  document.getElementById('rpt-avg-wt').textContent = weights.length ? (weights.reduce((a,b)=>a+b,0)/weights.length).toFixed(2) : '—';
+  const vols = d.map(t=>parseFloat(t.volume_cm3||0)/1000).filter(v=>v>0);
+  document.getElementById('rpt-avg-vol').textContent = vols.length ? (vols.reduce((a,b)=>a+b,0)/vols.length).toFixed(2) : '—';
+  const errors = d.filter(t=>t.status==='error'||t.status==='failed');
+  document.getElementById('rpt-error-rate').textContent = d.length ? (errors.length/d.length*100).toFixed(1)+'%' : '—';
+
+  // Peak hour
+  const hourBuckets = {};
+  d.forEach(tx => {
+    const h = new Date(tx.timestamp||0).getHours();
+    hourBuckets[h] = (hourBuckets[h]||0) + 1;
+  });
+  const peakH = Object.entries(hourBuckets).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('rpt-peak').textContent = peakH ? `${String(peakH[0]).padStart(2,'0')}:00 (${peakH[1]})` : '—';
+}
+
+function _buildCharts() {
+  _drawThroughputChart();
+  _drawHistogram('chart-weight', reportData.map(t=>parseFloat(t.weight_kg||0)).filter(v=>v>0), 10, 'kg');
+  _drawHistogram('chart-volume', reportData.map(t=>parseFloat(t.volume_cm3||0)/1000).filter(v=>v>0), 10, 'L');
+  _drawDonutStatus();
+}
+
+function _drawThroughputChart() {
+  const canvas = document.getElementById('chart-throughput');
+  if (!canvas) return;
+  const W = canvas.offsetWidth||600, H = 200;
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const buckets = {};
+  reportData.forEach(tx => {
+    const h = new Date(tx.timestamp||0);
+    const key = `${h.getFullYear()}-${h.getMonth()}-${h.getDate()}-${h.getHours()}`;
+    if (!buckets[key]) buckets[key] = { ok:0, error:0, label: `${String(h.getHours()).padStart(2,'0')}:00` };
+    if (tx.status==='error'||tx.status==='failed') buckets[key].error++;
+    else buckets[key].ok++;
+  });
+
+  const keys = Object.keys(buckets).sort();
+  if (!keys.length) { _drawEmpty(ctx,W,H,'No data'); return; }
+
+  const data   = keys.map(k => buckets[k]);
+  const maxVal = Math.max(1, ...data.map(b=>b.ok+b.error));
+  const style  = getComputedStyle(document.documentElement);
+  const clrP   = style.getPropertyValue('--clr-primary').trim()||'#1a8cff';
+  const clrD   = style.getPropertyValue('--clr-danger').trim()||'#ef4444';
+  const clrBg  = style.getPropertyValue('--clr-border-subtle').trim()||'#1a2235';
+  const clrTxt = style.getPropertyValue('--clr-text-tertiary').trim()||'#4d607d';
+  const padL=40,padR=8,padT=8,padB=28;
+  const iW=W-padL-padR, iH=H-padT-padB;
+  const bw = Math.max(4,(iW/data.length)*0.6);
+  const gap= (iW/data.length)*0.4;
+
+  // Gridlines
+  ctx.strokeStyle=clrBg; ctx.lineWidth=1;
+  [0.25,0.5,0.75,1].forEach(f => {
+    const y=padT+iH*(1-f);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+  });
+
+  data.forEach((b,i) => {
+    const x = padL + i*(bw+gap);
+    const okH = (b.ok/maxVal)*iH;
+    const errH = (b.error/maxVal)*iH;
+
+    // OK bar
+    const g1 = ctx.createLinearGradient(0,padT+iH-okH,0,padT+iH);
+    g1.addColorStop(0,clrP); g1.addColorStop(1,clrP+'55');
+    ctx.fillStyle=g1;
+    ctx.beginPath(); ctx.roundRect(x,padT+iH-okH,bw,okH,[2,2,0,0]); ctx.fill();
+
+    // Error bar stacked
+    if (b.error) {
+      const ey = padT+iH-okH-errH;
+      ctx.fillStyle=clrD+'aa';
+      ctx.beginPath(); ctx.roundRect(x,ey,bw,errH,[2,2,0,0]); ctx.fill();
+    }
+
+    // Label
+    const step = Math.max(1, Math.ceil(data.length/8));
+    if (i%step===0) {
+      ctx.fillStyle=clrTxt; ctx.font='9px monospace'; ctx.textAlign='center';
+      ctx.fillText(b.label, x+bw/2, H-6);
+    }
+  });
+
+  // Y axis label
+  ctx.fillStyle=clrTxt; ctx.font='9px monospace'; ctx.textAlign='right';
+  ctx.fillText(maxVal, padL-4, padT+8);
+  ctx.fillText('0', padL-4, padT+iH);
+}
+
+function _drawHistogram(id, values, bins, unit) {
+  const canvas = document.getElementById(id);
+  if (!canvas||!values.length) { if(canvas){const c=canvas.getContext('2d');_drawEmpty(c,canvas.offsetWidth||400,200,'No data');} return; }
+  const W=canvas.offsetWidth||400, H=200;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const min=Math.min(...values), max=Math.max(...values);
+  const range=max-min||1;
+  const binSize=range/bins;
+  const buckets=Array.from({length:bins},(_,i)=>({ label:(min+i*binSize).toFixed(1), count:0 }));
+  values.forEach(v => {
+    const i=Math.min(bins-1,Math.floor((v-min)/binSize));
+    buckets[i].count++;
+  });
+
+  const maxVal=Math.max(1,...buckets.map(b=>b.count));
+  const style=getComputedStyle(document.documentElement);
+  const clrP=style.getPropertyValue('--clr-primary').trim()||'#1a8cff';
+  const clrTxt=style.getPropertyValue('--clr-text-tertiary').trim()||'#4d607d';
+  const clrBg=style.getPropertyValue('--clr-border-subtle').trim()||'#1a2235';
+  const padL=8,padR=8,padT=8,padB=28;
+  const iW=W-padL-padR, iH=H-padT-padB;
+  const bw=(iW/bins)*0.8, gap=(iW/bins)*0.2;
+
+  ctx.strokeStyle=clrBg; ctx.lineWidth=1;
+  [0.5,1].forEach(f=>{const y=padT+iH*(1-f);ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();});
+
+  buckets.forEach((b,i)=>{
+    const x=padL+i*(bw+gap);
+    const bh=Math.max(2,(b.count/maxVal)*iH);
+    const y=padT+iH-bh;
+    const g=ctx.createLinearGradient(0,y,0,y+bh);
+    g.addColorStop(0,clrP); g.addColorStop(1,clrP+'44');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.roundRect(x,y,bw,bh,[2,2,0,0]); ctx.fill();
+    if(i%3===0){ctx.fillStyle=clrTxt;ctx.font='9px monospace';ctx.textAlign='center';ctx.fillText(b.label,x+bw/2,H-6);}
+  });
+}
+
+function _drawDonutStatus() {
+  const canvas = document.getElementById('chart-status');
+  if (!canvas) return;
+  const statusCounts = {};
+  reportData.forEach(tx => { statusCounts[tx.status||'ok'] = (statusCounts[tx.status||'ok']||0)+1; });
+  const total = Object.values(statusCounts).reduce((a,b)=>a+b,0)||1;
+  const colors = { ok:'#22c55e',success:'#22c55e',error:'#ef4444',warning:'#f59e0b',near_oos:'#f59e0b',failed:'#ef4444' };
+  const labels = { ok:'OK',success:'OK',error:'Error',warning:'Warning',near_oos:'Near OOS',failed:'Failed' };
+
+  const W=200,H=200;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  let startAngle = -Math.PI/2;
+  const cx=W/2, cy=H/2, r=70, ri=44;
+
+  Object.entries(statusCounts).forEach(([status,count]) => {
+    const slice = (count/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[status]||'#8a9bb8';
+    ctx.fill();
+    startAngle += slice;
+  });
+
+  // Donut hole
+  ctx.beginPath(); ctx.arc(cx,cy,ri,0,Math.PI*2); ctx.fillStyle='#161d2a'; ctx.fill();
+  // Center text
+  ctx.fillStyle='#e8edf5'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-6);
+  ctx.fillStyle='#4d607d'; ctx.font='10px sans-serif';
+  ctx.fillText('total',cx,cy+10);
+
+  // Legend
+  const legend = document.getElementById('chart-status-legend');
+  if (legend) {
+    legend.innerHTML = Object.entries(statusCounts).map(([s,c]) => `
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${colors[s]||'#8a9bb8'};flex-shrink:0;"></div>
+        <span style="color:var(--clr-text-secondary)">${labels[s]||s}</span>
+        <span style="color:var(--clr-text-primary);font-weight:600;margin-left:auto;">${c}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function _drawEmpty(ctx,W,H,msg) {
+  ctx.fillStyle='#4d607d'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(msg,W/2,H/2);
+}
+
+function _buildOperatorTable() {
+  const ops = {};
+  reportData.forEach(tx => {
+    const op = tx.operator || '(unset)';
+    if (!ops[op]) ops[op] = { scans:0, errors:0, weights:[], vols:[] };
+    ops[op].scans++;
+    if (tx.status==='error'||tx.status==='failed') ops[op].errors++;
+    if (tx.weight_kg) ops[op].weights.push(parseFloat(tx.weight_kg));
+    if (tx.volume_cm3) ops[op].vols.push(parseFloat(tx.volume_cm3)/1000);
+  });
+
+  const tbody = document.getElementById('rpt-operator-tbody');
+  const rows = Object.entries(ops).sort((a,b)=>b[1].scans-a[1].scans);
+  if (!rows.length) { tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--clr-text-tertiary);">No data</td></tr>`; return; }
+
+  tbody.innerHTML = rows.map(([op,d]) => {
+    const errRate = d.scans ? (d.errors/d.scans*100).toFixed(1)+'%' : '—';
+    const avgW = d.weights.length ? (d.weights.reduce((a,b)=>a+b,0)/d.weights.length).toFixed(2) : '—';
+    const avgV = d.vols.length    ? (d.vols.reduce((a,b)=>a+b,0)/d.vols.length).toFixed(2) : '—';
+    return `<tr>
+      <td>${_esc(op)}</td>
+      <td class="mono">${d.scans}</td>
+      <td class="mono" style="color:${d.errors?'var(--clr-danger)':'inherit'}">${d.errors}</td>
+      <td class="mono">${errRate}</td>
+      <td class="mono">${avgW}</td>
+      <td class="mono">${avgV}</td>
+    </tr>`;
+  }).join('');
+}
+
+function _buildHourlyTable() {
+  const hours = Array.from({length:24}, (_,i) => ({ hour:i, scans:0, errors:0, weights:[], vols:[] }));
+  reportData.forEach(tx => {
+    const h = new Date(tx.timestamp||0).getHours();
+    hours[h].scans++;
+    if (tx.status==='error'||tx.status==='failed') hours[h].errors++;
+    if (tx.weight_kg) hours[h].weights.push(parseFloat(tx.weight_kg));
+    if (tx.volume_cm3) hours[h].vols.push(parseFloat(tx.volume_cm3)/1000);
+  });
+  const tbody = document.getElementById('rpt-hourly-tbody');
+  tbody.innerHTML = hours.filter(h=>h.scans>0).map(h => {
+    const avgW = h.weights.length ? (h.weights.reduce((a,b)=>a+b,0)/h.weights.length).toFixed(2) : '—';
+    const avgV = h.vols.length    ? (h.vols.reduce((a,b)=>a+b,0)/h.vols.length).toFixed(2) : '—';
+    return `<tr>
+      <td class="mono">${String(h.hour).padStart(2,'0')}:00</td>
+      <td class="mono">${h.scans}</td>
+      <td class="mono" style="color:${h.errors?'var(--clr-danger)':'inherit'}">${h.errors}</td>
+      <td class="mono">${avgW}</td>
+      <td class="mono">${avgV}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--clr-text-tertiary);">No hourly data</td></tr>`;
+}
+
+function _exportReport() {
+  const { from, to } = _dateRange();
+  window.open(`${API_BASE}/export/pdf?start=${encodeURIComponent(from)}&end=${encodeURIComponent(to)}`, '_blank');
+}
+
+function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+# ==========================================================
+# DWS Final V7 - Runtime Dependencies
+# ==========================================================
+
+# Core Scientific Computing
+numpy>=2.2
+scipy>=1.16
+
+# Computer Vision
+opencv-python>=4.12
+open3d>=0.19
+pillow>=11.0
+
+# Intel RealSense
+pyrealsense2
+
+# Machine Learning
+torch>=2.8
+torchvision>=0.23
+scikit-learn>=1.5
+ultralytics>=8.3
+
+# Hardware Input (barcode scanner / HID devices — see barcode_node.py,
+# reliability/diagnostic_report.py)
+evdev>=1.7; sys_platform == "linux"
+
+# Networking & APIs
+fastapi>=0.116
+uvicorn>=0.35
+aiohttp>=3.12
+websockets>=15.0
+requests>=2.32
+
+# Authentication
+bcrypt>=4.1
+
+
+# PDF Export
+reportlab>=4.4
+
+# Serial Communication
+pyserial>=3.5
+
+# Utilities
+python-dateutil>=2.9
+tqdm>=4.67
+
+# Database
+aiosqlite>=0.21
+
+# Configuration
+PyYAML>=6.0

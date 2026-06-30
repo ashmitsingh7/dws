@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS — Audit Logs</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/logs.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Audit Logs</h1>
+      <p class="page-subtitle">System event &amp; error history</p>
+      <div class="page-actions">
+        <div class="flex-1"></div>
+        <button class="btn btn-ghost btn-sm" id="btn-export-json">
+          <svg class="icon icon-sm"><use href="#icon-download"/></svg> JSON
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-export-csv">
+          <svg class="icon icon-sm"><use href="#icon-download"/></svg> CSV
+        </button>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-logs" title="Refresh">
+          <svg class="icon icon-sm"><use href="#icon-refresh"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stat ribbon -->
+    <div class="stat-strip">
+      <div class="stat-strip-item">
+        <span class="stat-strip-label">Total</span>
+        <span class="stat-strip-value" id="stat-total">—</span>
+      </div>
+      <div class="stat-strip-item">
+        <span class="stat-strip-label">Critical</span>
+        <span class="stat-strip-value" id="stat-critical" style="color:var(--clr-danger)">—</span>
+      </div>
+      <div class="stat-strip-item">
+        <span class="stat-strip-label">Warnings</span>
+        <span class="stat-strip-value" id="stat-warning" style="color:var(--clr-warning)">—</span>
+      </div>
+      <div class="stat-strip-item">
+        <span class="stat-strip-label">Showing</span>
+        <span class="stat-strip-value" id="stat-shown">—</span>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="logs-filterbar">
+      <div class="logs-filter-field grow">
+        <label class="form-label" for="log-search">Search</label>
+        <input type="search" id="log-search" class="form-control" placeholder="Message, source, barcode…">
+      </div>
+      <div class="logs-filter-field">
+        <label class="form-label" for="log-severity">Severity</label>
+        <select id="log-severity" class="form-control">
+          <option value="">All</option>
+          <option value="critical">Critical</option>
+          <option value="error">Error</option>
+          <option value="warning">Warning</option>
+          <option value="info">Info</option>
+          <option value="success">Success</option>
+        </select>
+      </div>
+      <div class="logs-filter-field">
+        <label class="form-label" for="log-source">Source</label>
+        <select id="log-source" class="form-control">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="logs-filter-field">
+        <label class="form-label" for="log-from">From</label>
+        <input type="datetime-local" id="log-from" class="form-control">
+      </div>
+      <div class="logs-filter-field">
+        <label class="form-label" for="log-to">To</label>
+        <input type="datetime-local" id="log-to" class="form-control">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-clear-filters">Clear</button>
+      </div>
+    </div>
+
+    <!-- Log table -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <span class="table-title">Event Log</span>
+        <div class="table-toolbar-spacer"></div>
+        <span class="text-secondary text-sm" id="log-count" style="white-space:nowrap;">0 events</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="logs-table">
+          <thead>
+            <tr>
+              <th style="width:160px;">Timestamp</th>
+              <th style="width:120px;">Severity</th>
+              <th style="width:140px;">Source</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody">
+            <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--clr-text-tertiary);">Loading events…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination" id="logs-pagination">
+        <span class="pagination-info">—</span>
+        <div class="pagination-controls"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/theme_manager.js"></script>
+<script src="js/ui_manager.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/logs.js"></script>
+<script>
+'use strict';
+
+// Auth guard
+(function () {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('dws_session') || '{}');
+    if (!s.token) { window.location.href = 'login.html'; }
+  } catch { window.location.href = 'login.html'; }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  DWSNav.init('logs');
+  DWSShell.init('logs');
+  DWSLogs.init();
+});
+</script>
+</body>
+</html>

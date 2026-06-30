@@ -1,0 +1,105 @@
+/* ============================================================
+   SETTINGS PAGE
+   Build 005.1 — Sprint 4
+   Two-pane layout: section nav (left) + scrollable panels (right),
+   built on the pre-shipped .setting-row / .form-section atoms.
+   ============================================================ */
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--card-gap);
+  align-items: start;
+}
+@media (max-width: 900px) { .settings-layout { grid-template-columns: 1fr; } }
+
+/* ── SECTION NAV ──────────────────────────────────────────── */
+.settings-nav {
+  background: var(--clr-bg-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-2);
+  position: sticky;
+  top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@media (max-width: 900px) {
+  .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3);
+  border: none;
+  background: transparent;
+  color: var(--clr-text-secondary);
+  font-size: var(--text-base);
+  font-family: inherit;
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.settings-nav-item:hover { background: var(--clr-bg-hover); color: var(--clr-text-primary); }
+.settings-nav-item.active { background: var(--clr-primary-glow); color: var(--clr-primary); }
+.settings-nav-item .icon { color: inherit; }
+
+/* ── PANELS ───────────────────────────────────────────────── */
+.settings-panel { display: none; }
+.settings-panel.active { display: block; animation: fadeIn var(--dur-base) var(--ease-out) both; }
+
+.settings-panel-head {
+  margin-bottom: var(--sp-4);
+}
+.settings-panel-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--clr-text-primary);
+}
+.settings-panel-sub {
+  font-size: var(--text-sm);
+  color: var(--clr-text-tertiary);
+  margin-top: 2px;
+}
+
+.form-section-body.settings-rows { gap: 0; }
+
+/* ── ACCENT SWATCHES (appearance) ─────────────────────────── */
+.accent-swatches { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+.accent-swatch {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+  transition: transform var(--dur-fast);
+}
+.accent-swatch:hover { transform: scale(1.08); }
+.accent-swatch.selected { border-color: var(--clr-text-primary); box-shadow: 0 0 0 2px var(--clr-bg-base); }
+
+/* ── SAVE BAR ─────────────────────────────────────────────── */
+.settings-savebar {
+  position: sticky;
+  bottom: 0;
+  margin-top: var(--sp-4);
+  background: var(--clr-bg-elevated);
+  border: 1px solid var(--clr-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-3) var(--sp-5);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.settings-savebar .savebar-text {
+  font-size: var(--text-sm);
+  color: var(--clr-text-secondary);
+  flex: 1;
+}
+.settings-savebar .savebar-text.dirty { color: var(--clr-warning); }

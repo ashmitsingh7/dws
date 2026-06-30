@@ -1,0 +1,42 @@
+system:
+  station_id: STATION_01
+  # Developer Mode defaults (Build 005) are intentional for development.
+  # For production deployment, set developer_mode via Settings/API after install.
+  simulation_mode: false
+
+scale:
+  serial_port: /dev/ttyUSB0
+  baudrate: 9600
+  publish_rate_hz: 20
+  buffer_size: 20
+  spread_threshold_kg: 0.03
+  std_dev_threshold_kg: 0.012
+  required_stable_windows: 8
+  zero_threshold_kg: 0.05
+
+vision:
+  camera_mode: hardware
+  fps: 30
+
+database:
+  file: dws_data.db
+  retention_days: 30
+
+api:
+  host: 0.0.0.0
+  port: 8000
+
+hmi:
+  host: 0.0.0.0
+  websocket_port: 8765
+  http_port: 8090
+  static_port: 8080
+
+health:
+  check_interval_seconds: 5
+  min_free_disk_gb: 2.0
+
+sync:
+  enabled: false
+  cloud_url: https://api.dws-cloud.example.com/v1/sync
+  poll_interval_seconds: 10
