@@ -3,7 +3,7 @@
 **Delhivery Dimension Weight Scanner** | Industrial Parcel Measurement System  
 Built with Intel RealSense D455 · Python · ROS2 · OpenCV · FastAPI · WebSockets · SQLite
 
-> **Repository:** [github.com/ashmitsingh7/dws_finalv7](https://github.com/ashmitsingh7/dws)  
+> **Repository:** [github.com/ashmitsingh7/dws](https://github.com/ashmitsingh7/dws)  
 > **Author:** Ashmit Singh — Electronics Engineering (VLSI Design & Technology), VIT  
 > **Status:** Active industrial deployment — Delhivery logistics network
 
